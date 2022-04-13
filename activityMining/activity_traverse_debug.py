@@ -1,12 +1,14 @@
 import os
-import uiautomator2 as u2
-import requests
-import time
-from util import installApk, getActivityPackage, safeScreenshot, xmlScreenSaver_single, xmlScreenSaver
 import subprocess
+import time
+
+import requests
+import uiautomator2 as u2
 from grantPermissonDetector import dialogSolver
-from uiautomator2.exceptions import SessionBrokenError
 from hierachySolver import full_UI_click_test
+from uiautomator2.exceptions import SessionBrokenError
+from utils.util import (getActivityPackage, installApk, safeScreenshot,
+                        save_screen_data, xmlScreenSaver_single)
 
 
 def read_deeplinks(path):
@@ -183,7 +185,7 @@ def unit_traverse_phoTab(apkPath, d1, d2, deviceId1, deviceId2, deeplinks_dict, 
                 d2.app_uninstall(packageName)
                 continue
 
-            xmlScreenSaver(save_dir_package, xml1, xml2, img1, img2, d11_activity, d22_activity)
+            save_screen_data(save_dir_package, xml1, xml2, img1, img2, d11_activity, d22_activity)
             success_activities.append(d11_activity)
 
             d1.app_stop(packageName)

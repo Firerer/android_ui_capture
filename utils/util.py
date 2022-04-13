@@ -16,7 +16,6 @@ def connectionAdaptor(phoneDevice, tabletDevice):
     try:
         d1 = u2.connect(phoneDevice)
         d2 = u2.connect(tabletDevice)
-        d1.app_list()
         return d1, d2, True
     except requests.exceptions.ConnectionError:
         print("requests.exceptions.ConnectionError")
@@ -95,7 +94,6 @@ def getActivityPackage(d):
         isLauncher = True
     # NOTE: require names are in Android standard.
     d_activity = d_activity[d_activity.rindex(".") + 1 :]
-    d_package = d_package[d_package.rindex(".") + 1 :]
     return d_activity, d_package, isLauncher
 
 
@@ -103,16 +101,17 @@ def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
 
-def saveXmlScreen(saveDir, xml1, xml2, img1, img2, activity_name, package_name):
+def save_screen_data(saveDir, xml1, xml2, img1, img2, activity_name, package_name):
     if img1 is None or img2 is None:
         print("none img, save fail, return")
         return
 
-    t = int(time.time())
+    if not os.path.exists(saveDir):
+        os.mkdir(saveDir)
 
     def getPath(devicetype, filetype):
         return os.path.join(
-            saveDir, f"{package_name}_{activity_name}_{str(t)}_{devicetype}.{filetype}"
+            saveDir, f"{package_name}_{activity_name}_{devicetype}.{filetype}"
         )
 
     xml1Path = getPath("phone", "xml")
@@ -120,8 +119,8 @@ def saveXmlScreen(saveDir, xml1, xml2, img1, img2, activity_name, package_name):
     xml2Path = getPath("tablet", "xml")
     img2Path = getPath("tablet", "png")
 
-    with open(xml1Path, "a", encoding="utf8") as f1, open(
-        xml2Path, "a", encoding="utf8"
+    with open(xml1Path, "w+", encoding="utf8") as f1, open(
+        xml2Path, "w+", encoding="utf8"
     ) as f2:
         f1.write(xml1)
         f2.write(xml2)

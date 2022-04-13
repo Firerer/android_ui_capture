@@ -1,15 +1,18 @@
-import requests
-import bs4
 import argparse
-from requests.models import Response
-import cloudscraper
 import os
+
+import bs4
+import cloudscraper
+import requests
 import timeout_decorator
+from definitions import APK_DIR
+from requests.models import Response
 
-collectExtentions = ['APK']
+collectExtentions = ["APK"]
 
 
-@timeout_decorator.timeout(300, timeout_exception=StopIteration)
+# @timeout_decorator.timeout(300, timeout_exception=StopIteration)
+# @timeout_decorator.timeout(300)
 def apkpureDownloader(cat, package_name, saveDir):
     # parser = argparse.ArgumentParser(description='Download all versions of an Android mobile application from apkpure.com')
     # required = parser.add_argument_group('required arguments')
@@ -21,9 +24,7 @@ def apkpureDownloader(cat, package_name, saveDir):
     catDir = os.path.join(saveDir, cat)
     if not os.path.exists(catDir):
         os.mkdir(catDir)
-    scraper = cloudscraper.create_scraper(delay=1000,
-                                          browser='chrome'
-                                          )
+    scraper = cloudscraper.create_scraper(delay=1000)
 
     base_url = "https://apkpure.com"
     # package_name = args.p
@@ -38,8 +39,15 @@ def apkpureDownloader(cat, package_name, saveDir):
 
     for element in a_elements:
         # print(element.attrs["href"])
-        if "href" in element.attrs and element.attrs["href"] != None and package_name in element.attrs["href"]:
-            if "/" in element.attrs["href"] and element.attrs["href"].split("/")[-1] == package_name:
+        if (
+            "href" in element.attrs
+            and element.attrs["href"] != None
+            and package_name in element.attrs["href"]
+        ):
+            if (
+                "/" in element.attrs["href"]
+                and element.attrs["href"].split("/")[-1] == package_name
+            ):
                 package_url = element.attrs["href"]
 
     if package_url == "":
@@ -62,7 +70,7 @@ def apkpureDownloader(cat, package_name, saveDir):
         versions_elements_div = soup.find("ul", attrs={"class": "ver-wrap"})
         versions_elements_li = versions_elements_div.findAll("li", recursive=False)
     except Exception:
-        print('raise exception when parse available apks, skip')
+        print("raise exception when parse available apks, skip")
         return
 
     for list_item in versions_elements_li:
@@ -85,11 +93,16 @@ def apkpureDownloader(cat, package_name, saveDir):
         try:
             soup = bs4.BeautifulSoup(download_page, "html.parser")
             download_link = soup.find("iframe", {"id": "iframe_download"}).attrs["src"]
-            filename = soup.find("span", {"class": "file"}).text.rsplit(' ', 2)[0].replace(" ", "_").lower()
+            filename = (
+                soup.find("span", {"class": "file"})
+                .text.rsplit(" ", 2)[0]
+                .replace(" ", "_")
+                .lower()
+            )
             print(filename + " is downloading, please wait..")
             file = scraper.get(download_link)
         except Exception:
-            print('raise exception when download apk, skip')
+            print("raise exception when download apk, skip")
             return
 
         # current_directory = os.getcwd()
@@ -98,7 +111,7 @@ def apkpureDownloader(cat, package_name, saveDir):
             os.makedirs(final_directory)
         savePath = os.path.join(final_directory, filename)
         if os.path.exists(savePath):
-            print(filename + 'has been downloaded, skip.')
+            print(filename + "has been downloaded, skip.")
         else:
             open(savePath, "wb").write(file.content)
 
@@ -111,14 +124,20 @@ def apkpureDownloader(cat, package_name, saveDir):
             Getting first variant for now.
             """
             soup = bs4.BeautifulSoup(download_page, "html.parser")
-            apk_url = soup.find("div", {"class": "table-cell down"}).find("a").attrs["href"]
+            apk_url = (
+                soup.find("div", {"class": "table-cell down"}).find("a").attrs["href"]
+            )
             download_page = scraper.get(base_url + apk_url).text
         download_apk(download_page)
     print("All APK's are downloaded!")
 
 
-if __name__ == '__main__':
-    cat = 'network'
-    package_name = 'com.twitter.android'
-    saveDir = r'/Users/hhuu0025/PycharmProjects/uiautomator2/googleplay/apks'
+def main():
+    cat = "network"
+    package_name = "com.twitter.android"
+    saveDir = APK_DIR
     apkpureDownloader(cat, package_name, saveDir)
+
+
+if __name__ == "__main__":
+    main()

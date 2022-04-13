@@ -1,5 +1,5 @@
 import uiautomator2 as u2
-from util import connectionAdaptor
+from utils.util import connectionAdaptor
 import requests
 import time
 

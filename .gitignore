@@ -1,3 +1,7 @@
 venv/
-saveScreen/
 __pycache__/
+
+saveScreen/**
+results/**
+
+resources/apks/**

@@ -1,26 +1,124 @@
+import csv
+import os
+import time
+from dataclasses import dataclass
+
 import definitions
-from util import connectionAdaptor, getActivityPackage, safeScreenshot, saveXmlScreen
+import uiautomator2 as u2
+from utils.util import (connectionAdaptor, getActivityPackage, safeScreenshot,
+                        save_screen_data)
 
 
-def screenCap(
-    phoneDevice=definitions.PHONE_SERIAL,
-    tabletDevice=definitions.TABLET_SERIAL,
-    saveDir=definitions.OUT_DIR,
+@dataclass
+class ScreenCapture:
+    apk_name: str
+    activity_name: str
+    directory: str
+    time: int
+
+
+def append_to_csv(d):
+    fieldnames = list(vars(d))
+    if not os.path.exists(definitions.CSV_PATH):
+        with open(definitions.CSV_PATH, "a", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+    with open(definitions.CSV_PATH, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writerow(vars(d))
+
+
+def save_screen_data(out_dir, xml1, xml2, img1, img2, activity_name, package_name):
+    if img1 is None or img2 is None:
+        print("none img, save fail, return")
+        return
+
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+
+    def getPath(devicetype, filetype):
+        return os.path.join(out_dir, f"{devicetype}.{filetype}")
+
+    xml1Path = getPath("phone", "xml")
+    img1Path = getPath("phone", "png")
+    xml2Path = getPath("tablet", "xml")
+    img2Path = getPath("tablet", "png")
+
+    with open(xml1Path, "w+", encoding="utf8") as f1, open(
+        xml2Path, "w+", encoding="utf8"
+    ) as f2:
+        f1.write(xml1)
+        f2.write(xml2)
+        img1.save(img1Path)
+        img2.save(img2Path)
+
+
+def capture_ui_data(
+    phoneDevice=definitions.PHONE_ID,
+    tabletDevice=definitions.TABLET_ID,
 ):
-    d1, d2, connectStatus = connectionAdaptor(phoneDevice, tabletDevice)
-    while not connectStatus:
-        d1, d2, connectStatus = connectionAdaptor(phoneDevice, tabletDevice)
+    t = str(int(time.time()))
+    out_dir = os.path.join(definitions.OUT_DIR, t)
 
-    d1_activity, d1_package, d1_launcher = getActivityPackage(d1)
-    d2_activity, d2_package, d2_launcher = getActivityPackage(d2)
+    d1, d2, status = connectionAdaptor(phoneDevice, tabletDevice)
+    while not status:
+        d1, d2, status = connectionAdaptor(phoneDevice, tabletDevice)
+
+    d1_activity, d1_package, isLauncher = getActivityPackage(d1)
+    # d2_activity, d2_package, d2_launcher = getActivityPackage(d2)
 
     xml1 = d1.dump_hierarchy(compressed=True)
     xml2 = d2.dump_hierarchy(compressed=True)
     img1 = safeScreenshot(d1)
     img2 = safeScreenshot(d2)
 
-    saveXmlScreen(saveDir, xml1, xml2, img1, img2, d1_activity, d1_package)
+    save_screen_data(out_dir, xml1, xml2, img1, img2, d1_activity, d1_package)
+    append_to_csv(ScreenCapture(d1_package, d1_activity, out_dir, t))
+
+
+def save_screen_data_tablet(out_dir, xml1, xml2, img1, img2, activity_name, package_name):
+    if img1 is None or img2 is None:
+        print("none img, save fail, return")
+        return
+
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+
+    def getPath(filename, filetype):
+        return os.path.join(out_dir, f"{filename}.{filetype}")
+
+    xml1Path = getPath("tablet_hor", "xml")
+    img1Path = getPath("tablet_hor", "png")
+    xml2Path = getPath("tablet_ver", "xml")
+    img2Path = getPath("tablet_ver", "png")
+
+    with open(xml1Path, "w+", encoding="utf8") as f1, open(
+        xml2Path, "w+", encoding="utf8"
+    ) as f2:
+        f1.write(xml1)
+        f2.write(xml2)
+        img1.save(img1Path)
+        img2.save(img2Path)
+
+def capture_ui_data_tablet(tabletDevice=definitions.TabletDevice):
+    t = str(int(time.time()))
+    out_dir = os.path.join(definitions.OUT_DIR, t)
+
+    d1 = u2.connect(tabletDevice)
+
+    d1_activity, d1_package, isLauncher = getActivityPackage(d1)
+
+    xml1 = d1.dump_hierarchy(compressed=True)
+    img1 = safeScreenshot(d1)
+
+    # rotate and record
+    d1.set_orientation('l')
+    xml2 = d1.dump_hierarchy(compressed=True)
+    img2 = safeScreenshot(d1)
+
+    save_screen_data(out_dir, xml1, xml2, img1, img2, d1_activity, d1_package)
+    # append_to_csv(ScreenCapture(d1_package, d1_activity, out_dir, t))
 
 
 if __name__ == "__main__":
-    screenCap()
+    capture_ui_data()
