@@ -76,6 +76,17 @@ def capture_ui_data(
     append_to_csv(ScreenCapture(d1_package, d1_activity, out_dir, t))
 
 
+def append_to_csv_tablet(d):
+    out_path = definitions.TABLET_CSV_PATH
+    fieldnames = list(vars(d))
+    if not os.path.exists(out_path):
+        with open(out_path, "a", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+    with open(out_path, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writerow(vars(d))
+
 def save_screen_data_tablet(out_dir, xml1, xml2, img1, img2, activity_name, package_name):
     if img1 is None or img2 is None:
         print("none img, save fail, return")
@@ -100,7 +111,7 @@ def save_screen_data_tablet(out_dir, xml1, xml2, img1, img2, activity_name, pack
         img1.save(img1Path)
         img2.save(img2Path)
 
-def capture_ui_data_tablet(tabletDevice=definitions.TabletDevice):
+def capture_ui_data_tablet(tabletDevice=definitions.TABLET_ID):
     t = str(int(time.time()))
     out_dir = os.path.join(definitions.OUT_DIR, t)
 
@@ -108,17 +119,22 @@ def capture_ui_data_tablet(tabletDevice=definitions.TabletDevice):
 
     d1_activity, d1_package, isLauncher = getActivityPackage(d1)
 
+    d1.set_orientation('r')
+    time.sleep(1) #wait for rotation
     xml1 = d1.dump_hierarchy(compressed=True)
     img1 = safeScreenshot(d1)
 
     # rotate and record
-    d1.set_orientation('l')
+    d1.set_orientation('n')
+    time.sleep(1) #wait for rotation
     xml2 = d1.dump_hierarchy(compressed=True)
     img2 = safeScreenshot(d1)
 
-    save_screen_data(out_dir, xml1, xml2, img1, img2, d1_activity, d1_package)
-    # append_to_csv(ScreenCapture(d1_package, d1_activity, out_dir, t))
+    d1.set_orientation('r')
+    save_screen_data_tablet(out_dir, xml1, xml2, img1, img2, d1_activity, d1_package)
+    append_to_csv_tablet(ScreenCapture(d1_package, d1_activity, out_dir, t))
 
 
 if __name__ == "__main__":
-    capture_ui_data()
+    # capture_ui_data()
+    capture_ui_data_tablet()

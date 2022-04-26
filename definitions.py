@@ -15,6 +15,8 @@ if not os.path.exists(APK_DIR):
 
 CSV_PATH = os.path.join(OUT_DIR, "results.csv")
 
+TABLET_CSV_PATH = os.path.join(OUT_DIR, "tablet_results.csv")
+
 # get serial number by $>adb devices
 PHONE_ID = "LMK420TSUKR8PVTG7P"
 TABLET_ID = "R52RA0C2MFF"
