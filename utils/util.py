@@ -4,7 +4,6 @@ import os
 import subprocess
 import time
 from difflib import SequenceMatcher
-from webbrowser import get
 
 import requests
 from pyaxmlparser import APK

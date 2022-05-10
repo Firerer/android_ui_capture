@@ -16,6 +16,10 @@ class ScreenCapture:
     directory: str
     time: int
 
+    def from_row(row, header):
+        d = dict(zip(header, row))
+        return ScreenCapture(d['apk_name'], d['activity_name'], d[ 'directory' ], d[ 'time' ])
+
 
 def append_to_csv(d):
     fieldnames = list(vars(d))
@@ -121,16 +125,15 @@ def capture_ui_data_tablet(tabletDevice=definitions.TABLET_ID):
 
     d1.set_orientation('r')
     time.sleep(1) #wait for rotation
-    xml1 = d1.dump_hierarchy(compressed=True)
-    img1 = safeScreenshot(d1)
+    xml1 = self.dump_hierarchy(compressed=True)
+    img1 = self.screenshot()
 
     # rotate and record
     d1.set_orientation('n')
     time.sleep(1) #wait for rotation
-    xml2 = d1.dump_hierarchy(compressed=True)
-    img2 = safeScreenshot(d1)
+    xml2 = self.dump_hierarchy(compressed=True)
+    img2 = self.screenshot()
 
-    d1.set_orientation('r')
     save_screen_data_tablet(out_dir, xml1, xml2, img1, img2, d1_activity, d1_package)
     append_to_csv_tablet(ScreenCapture(d1_package, d1_activity, out_dir, t))
 
