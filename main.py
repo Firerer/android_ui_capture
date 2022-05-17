@@ -14,9 +14,11 @@ def add_method(cls):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             return func(*args, **kwargs)
+
         setattr(cls, func.__name__, wrapper)
         # Note we are not binding func, but wrapper which accepts self but does exactly the same as func
-        return func # returning func means func can still be used normally
+        return func  # returning func means func can still be used normally
+
     return decorator
 
 
@@ -27,33 +29,34 @@ class ScreenCapture:
     directory: str
 
 
-class Device(u2.Device) :
+class Device(u2.Device):
     """
     Class for capture both phone and tablet UI data using only tablet device.
     Change density-independent pixels(dp)
     https://developer.android.com/training/multiscreen/screendensities
     """
+
     def __init__(self, *args):
         super().__init__(*args)
-        self.rotate('natural')
-            .font()
-            .to_tablet()
+        self.rotate("natural")
+        self.font()
+        self.to_tablet()
 
     def to_tablet(self):
         return self.res(1300, 800)
 
     def is_tablet(self):
-        return self.info['displaySizeDpX'] == 1300
+        return self.info["displaySizeDpX"] == 1300
 
     def to_phone(self):
         return self.res(400, 900)
 
     def is_phone(self):
-        return self.info['displaySizeDpX'] == 400
+        return self.info["displaySizeDpX"] == 400
 
     def font(self, scale=1.00):
         out, code = self.shell(f"settings put system font_scale {scale}")
-        print(f"{code}: seeting font {scale}")
+        print(f"{code}: seting font to {scale}")
         return self
 
     def res(self, w=1200, h=2000):
@@ -61,10 +64,10 @@ class Device(u2.Device) :
         px = dp * (dpi / 160)
         """
         out, code = self.shell(f"wm size {w}dpx{h}dp")
-        print(f"{code}: changing resolution {w}dpx{h}dp")
+        print(f"{code}: changing resolution to {w}dpx{h}dp")
         return self
 
-    def rotate(self, dirt='natural'):
+    def rotate(self, dirt="natural"):
         """
         dirt=['left', 'right', 'natural', 'upsidedown']
         """
@@ -80,11 +83,11 @@ class Device(u2.Device) :
         img1 = self.screenshot()
         if self.is_tablet():
             self.to_phone()
-            s1, s2 = 'tablet', 'phone'
+            s1, s2 = "tablet", "phone"
         else:
             self.to_tablet()
-            s1, s2 = 'phone', 'tablet'
-        time.sleep(1) # wait for rerendering
+            s1, s2 = "phone", "tablet"
+        time.sleep(1)  # wait for rerendering
         xml2 = self.dump_hierarchy(False, True)
         img2 = self.screenshot()
 
@@ -114,7 +117,7 @@ class Device(u2.Device) :
         # saving metadata
         out_path = definitions.CSV_VM
         i = self.app_current()
-        d = ScreenCapture(i['package'], i['activity'], out_dir)
+        d = ScreenCapture(i["package"], i["activity"], out_dir)
         fieldnames = list(vars(d))
         if not os.path.exists(out_path):
             with open(out_path, "a", newline="") as f:
@@ -125,7 +128,7 @@ class Device(u2.Device) :
             writer.writerow(vars(d))
 
     def install(self, apk_path):
-        self.app_install(self, apk_path)
+        self.app_install(apk_path)
         apk_name = APK(apk_path).get_package()
         self.app_start(apk_name)
 
@@ -156,10 +159,10 @@ def main():
         apk_paths = [f for f in apk_paths if os.path.isfile(f)]
 
         l = len(apk_paths)
-        for i in list(enumerate(apk_paths + ['exit'])):
+        for i in list(enumerate(apk_paths + ["exit"])):
             print(i)
         i = int(input("Enter a index: "))
-        if(i==l):
+        if i == l:
             return
         else:
             tablet.install(apk_paths[i])
@@ -170,7 +173,7 @@ def main():
         tablet.save(out_dir)
 
     def cur():
-        print(str(tablet.app_current()) + '\n')
+        print(str(tablet.app_current()) + "\n")
 
     def nothing():
         pass
@@ -179,7 +182,7 @@ def main():
         "refresh": nothing,
         "screenshot": screenshots,
         "install": install,
-        "current": cur
+        "current": cur,
     }
 
     while True:
@@ -188,6 +191,7 @@ def main():
             print(i)
         i = int(input("Enter a index: "))
         d[cmds[i]]()
+
 
 if __name__ == "__main__":
     main()
